@@ -14,6 +14,7 @@ RUN apt-get update \
         libunwind8 \
         libuuid1 \
         zlib1g \
+	openssh-server \
     && rm -rf /var/lib/apt/lists/*
 
 # Install .NET Core SDK
@@ -24,7 +25,12 @@ RUN curl -SL $DOTNET_SDK_DOWNLOAD_URL --output dotnet.tar.gz \
     && mkdir -p /usr/share/dotnet \
     && tar -zxf dotnet.tar.gz -C /usr/share/dotnet \
     && rm dotnet.tar.gz \
-    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/sshd \
+    && mkdir -p /var/run/sshd
+
+RUN adduser --quiet jenkins \
+	&& echo "jenkins:jenkins" | chpasswd
 
 # Trigger the population of the local package cache
 ENV NUGET_XMLDOC_MODE skip
@@ -33,4 +39,8 @@ RUN mkdir warmup \
     && dotnet new \
     && cd .. \
     && rm -rf warmup \
-    && rm -rf /tmp/NuGetScratch
+    && rm -rf /tmp/NuGetScratchi
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"]
