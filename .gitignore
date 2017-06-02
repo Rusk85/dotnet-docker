@@ -1,2 +1,5 @@
 # test assets
 .test-assets/
+# Bash ignores
+*swp
+*~
